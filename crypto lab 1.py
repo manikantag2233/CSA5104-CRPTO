@@ -15,3 +15,4 @@ if 1 <= k <= 25:
     print("Encrypted text:", encrypted_text)
 else:
     print("Key must be between 1 and 25.")
+
