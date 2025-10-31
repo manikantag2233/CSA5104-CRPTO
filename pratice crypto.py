@@ -1,0 +1,113 @@
+# Playfair Cipher Decryption Program
+# PT-109 Message Example
+# Author: ChatGPT (GPT-5)
+# Date: 2025-10-31
+
+def generate_key_square(key):
+    """Generate a 5x5 Playfair key square (I/J combined)."""
+    key = key.upper().replace("J", "I")
+    seen = set()
+    square = []
+
+    # Add unique letters from key
+    for char in key:
+        if char.isalpha() and char not in seen:
+            seen.add(char)
+            square.append(char)
+
+    # Add remaining letters of alphabet (except J)
+    for char in "ABCDEFGHIKLMNOPQRSTUVWXYZ":
+        if char not in seen:
+            seen.add(char)
+            square.append(char)
+
+    # Convert to 5x5 matrix
+    return [square[i:i+5] for i in range(0, 25, 5)]
+
+
+def find_position(square, letter):
+    """Find row and column of a letter in the key square."""
+    if letter == "J":
+        letter = "I"
+    for row in range(5):
+        for col in range(5):
+            if square[row][col] == letter:
+                return row, col
+    return None
+
+
+def decrypt_playfair(ciphertext, square):
+    """Decrypt ciphertext using Playfair cipher rules."""
+    ciphertext = ciphertext.upper().replace("J", "I")
+    ciphertext = "".join([c for c in ciphertext if c.isalpha()])  # keep only letters
+
+    plaintext = ""
+
+    # Process in pairs (digraphs)
+    i = 0
+    while i < len(ciphertext):
+        a = ciphertext[i]
+        b = ciphertext[i + 1] if i + 1 < len(ciphertext) else 'X'
+
+        row1, col1 = find_position(square, a)
+        row2, col2 = find_position(square, b)
+
+        if row1 == row2:
+            # Same row → move left
+            plaintext += square[row1][(col1 - 1) % 5]
+            plaintext += square[row2][(col2 - 1) % 5]
+        elif col1 == col2:
+            # Same column → move up
+            plaintext += square[(row1 - 1) % 5][col1]
+            plaintext += square[(row2 - 1) % 5][col2]
+        else:
+            # Rectangle rule → swap columns
+            plaintext += square[row1][col2]
+            plaintext += square[row2][col1]
+
+        i += 2
+
+    return plaintext
+
+
+def print_square(square):
+    print("\nPlayfair Key Square:")
+    for row in square:
+        print(" ".join(row))
+    print()
+
+
+# --- MAIN PROGRAM ---
+if __name__ == "__main__":
+    print("Playfair Cipher Decryption — PT-109 Message\n")
+
+    # Given cipher message
+    ciphertext = ("KXJEY UREBE ZWEHE WRYTU HEYFS "
+                  "KREHE GOYFI WTTTU OLKSY CAJPO "
+                  "BOTEI ZONTX BYBNT GONEY CUZWR "
+                  "GDSON SXBOU YWRHE BAAHY USEDQ")
+
+    print("Ciphertext:\n", ciphertext, "\n")
+
+    # Ask user for key
+    key = input("Enter Playfair key (press Enter for default 'KENNEDY'): ")
+    if not key.strip():
+        key = "KENNEDY"
+
+    # Build Playfair square
+    square = generate_key_square(key)
+    print_square(square)
+
+    # Decrypt
+    plaintext = decrypt_playfair(ciphertext, square)
+    print("Decrypted text (raw, may include filler X’s):\n")
+    print(plaintext)
+
+    # Optional: format into readable text
+    formatted = ""
+    for i, ch in enumerate(plaintext):
+        formatted += ch
+        if (i + 1) % 5 == 0:
+            formatted += " "
+    print("\nFormatted output (for readability):\n")
+    print(formatted)
